@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Test3D
+namespace Mono3D
 {
     public static class Drawing
     {

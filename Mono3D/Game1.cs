@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Test3D
+namespace Mono3D
 {
     public class Game1 : Game
     {

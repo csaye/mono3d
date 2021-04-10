@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Test3D
+namespace Mono3D
 {
     public static class Program
     {

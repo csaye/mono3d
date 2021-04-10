@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework.Input;
 using System;
 
-namespace Test3D
+namespace Mono3D
 {
     public class Map
     {
@@ -11,9 +11,9 @@ namespace Test3D
         // Map data
         private BlockType[,,] map;
 
-        private const int width = 32;
-        private const int height = 32;
-        private const int length = 32;
+        private const int Width = 32;
+        private const int Height = 32;
+        private const int Length = 32;
 
         private const bool ShowSky = false;
 
@@ -26,14 +26,14 @@ namespace Test3D
         private Vector3 direction;
         private Vector2 rotation;
 
-        private const float Speed = 5;
+        private const float Speed = 3;
         private const float Spin = 1;
 
         private const float BaseFov = Pi / 4;
         private readonly Vector2 Fov = new Vector2(BaseFov, BaseFov);
 
         // Ray data
-        private const float RayStep = 0.1f;
+        private const float RayStep = 0.5f;
         private const float MaxDepth = 32;
 
         public Map()
@@ -55,12 +55,12 @@ namespace Test3D
             //}
 
             // Initialize map
-            map = new BlockType[width, height, length];
-            for (int x = 0; x < width; x++)
+            map = new BlockType[Width, Height, Length];
+            for (int x = 0; x < Width; x++)
             {
-                for (int y = 0; y < height; y++)
+                for (int y = 0; y < Height; y++)
                 {
-                    for (int z = 0; z < length; z++)
+                    for (int z = 0; z < Length; z++)
                     {
                         if (x % 4 == 0 && y % 4 == 0 && z % 4 == 0)
                         {
@@ -106,9 +106,9 @@ namespace Test3D
                     {
                         // If in bounds, check whether wall hit
                         if (
-                            rayPosition.X >= 0 && rayPosition.X < width &&
-                            rayPosition.Y >= 0 && rayPosition.Y < height &&
-                            rayPosition.Z >= 0 && rayPosition.Z < length
+                            rayPosition.X >= 0 && rayPosition.X < Width &&
+                            rayPosition.Y >= 0 && rayPosition.Y < Height &&
+                            rayPosition.Z >= 0 && rayPosition.Z < Length
                             )
                         {
                             // Get ray coordiates on map
