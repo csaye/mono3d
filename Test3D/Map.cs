@@ -6,6 +6,9 @@ namespace Test3D
 {
     public class Map
     {
+        private float fps;
+
+        // Map data
         private BlockType[,,] map;
 
         private const int width = 32;
@@ -16,10 +19,10 @@ namespace Test3D
         private Vector3 position;
         private Vector2 angle;
 
-        private Vector2 direction;
+        private Vector3 direction;
         private Vector2 rotation;
 
-        private const float Speed = 1;
+        private const float Speed = 3;
         private const float Spin = 1;
 
         private const float Fov = (float)Math.PI / 4;
@@ -31,7 +34,7 @@ namespace Test3D
         public Map()
         {
             // Initialize map
-            map = new BlockType[width, length, height];
+            map = new BlockType[width, height, length];
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
@@ -61,6 +64,7 @@ namespace Test3D
         public void Update(GameTime gameTime, Game1 game)
         {
             float delta = (float)gameTime.ElapsedGameTime.TotalSeconds; // Get time delta
+            fps = 1 / delta; // Set fps
             ProcessKeyboardState(game); // Process keyboard state
             MovePlayer(delta); // Move player by delta
         }
@@ -128,6 +132,10 @@ namespace Test3D
                 }
             }
 
+            // Draw data text
+            Drawing.DrawText("pos: " + position.ToString(), new Vector2(8, 8), Color.White, game);
+            Drawing.DrawText("angle: " + angle.ToString(), new Vector2(8, 24), Color.White, game);
+            Drawing.DrawText("fps: " + fps.ToString(), new Vector2(8, 40), Color.White, game);
         }
 
         private void ProcessKeyboardState(Game1 game)
@@ -135,16 +143,19 @@ namespace Test3D
             KeyboardState state = game.KeyboardState;
 
             // Get movement direction
-            if (state.IsKeyDown(Keys.W)) direction.Y = 1;
-            else if (state.IsKeyDown(Keys.S)) direction.Y = -1;
-            else direction.Y = 0;
-            if (state.IsKeyDown(Keys.D)) direction.X = 1;
-            else if (state.IsKeyDown(Keys.A)) direction.X = -1;
+            if (state.IsKeyDown(Keys.W)) direction.X = 1;
+            else if (state.IsKeyDown(Keys.S)) direction.X = -1;
             else direction.X = 0;
+            if (state.IsKeyDown(Keys.D)) direction.Z = 1;
+            else if (state.IsKeyDown(Keys.A)) direction.Z = -1;
+            else direction.Z = 0;
+            if (state.IsKeyDown(Keys.LeftShift)) direction.Y = 1;
+            else if (state.IsKeyDown(Keys.Space)) direction.Y = -1;
+            else direction.Y = 0;
 
             // Get movement rotation
-            if (state.IsKeyDown(Keys.Up)) rotation.Y = 1;
-            else if (state.IsKeyDown(Keys.Down)) rotation.Y = -1;
+            if (state.IsKeyDown(Keys.Up)) rotation.Y = -1;
+            else if (state.IsKeyDown(Keys.Down)) rotation.Y = 1;
             else rotation.Y = 0;
             if (state.IsKeyDown(Keys.Right)) rotation.X = 1;
             else if (state.IsKeyDown(Keys.Left)) rotation.X = -1;
@@ -156,9 +167,18 @@ namespace Test3D
         {
             // Update angle
             angle += rotation * Spin * delta;
+            // Clamp angle Y
+            angle.Y = Math.Clamp(angle.Y, (float)Math.PI / -2, (float)Math.PI / 2);
 
-            // Update position
-            position += new Vector3(direction.X, direction.Y, 0) * Speed * delta;
+            // Update position frontways
+            position.X += direction.X * (float)Math.Cos(angle.X) * (float)Math.Cos(angle.Y) * Speed * delta;
+            position.Y += direction.X * (float)Math.Sin(angle.Y) * Speed * delta;
+            position.Z += direction.X * (float)Math.Sin(angle.X) * (float)Math.Cos(angle.Y) * Speed * delta;
+            // Update position sideways
+            position.X += direction.Z * (float)Math.Sin(angle.X) * Speed * delta;
+            position.Z += direction.Z * (float)Math.Cos(angle.X) * Speed * delta;
+            // Update position vertically
+            position.Y += direction.Y * Speed * delta;
         }
     }
 }
