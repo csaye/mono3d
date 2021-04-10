@@ -12,6 +12,7 @@ namespace Test3D
         private const int height = 32;
         private const int length = 32;
 
+        // Player data
         private Vector3 position;
         private Vector2 angle;
 
@@ -20,6 +21,12 @@ namespace Test3D
 
         private const float Speed = 1;
         private const float Spin = 1;
+
+        private const float Fov = (float)Math.PI / 4;
+
+        // Ray data
+        private const float RayStep = 0.4f;
+        private const float MaxDepth = 64;
 
         public Map()
         {
@@ -60,6 +67,66 @@ namespace Test3D
 
         public void Draw(Game1 game)
         {
+            // Cast ray for each grid
+            for (int x = 0; x < Drawing.GridWidth; x++)
+            {
+                for (int y = 0; y < Drawing.GridHeight; y++)
+                {
+                    // Get ray angle
+                    float rayX = angle.X - (Fov / 2) + (Fov * ((float)x / Drawing.GridWidth));
+                    float rayY = angle.Y - (Fov / 2) + (Fov * ((float)y / Drawing.GridHeight));
+                    Vector2 rayAngle = new Vector2(rayX, rayY);
+
+                    // Initialize ray
+                    Vector3 rayPosition = position;
+                    float rayDistance = 0;
+                    bool hitWall = false;
+
+                    // While wall not hit and ray not exceeded max depth
+                    while (!hitWall && rayDistance < MaxDepth)
+                    {
+                        // If in bounds, check whether wall hit
+                        if (
+                            rayPosition.X >= 0 && rayPosition.X < width &&
+                            rayPosition.Y >= 0 && rayPosition.Y < height &&
+                            rayPosition.Z >= 0 && rayPosition.Z < length
+                            )
+                        {
+                            int mapX = (int)rayPosition.X;
+                            int mapY = (int)rayPosition.Y;
+                            int mapZ = (int)rayPosition.Z;
+
+                            try
+                            {
+                                if (map[mapX, mapY, mapZ] != BlockType.Air) hitWall = true;
+                            }
+                            catch
+                            {
+                                Console.WriteLine($"{mapX}, {mapY}, {mapZ}");
+                            }
+                        }
+
+                        // If wall not hit, increment ray distance
+                        if (!hitWall)
+                        {
+                            rayPosition.X += RayStep * (float)Math.Cos(rayAngle.X) * (float)Math.Cos(rayAngle.Y);
+                            rayPosition.Y += RayStep * (float)Math.Sin(rayAngle.Y);
+                            rayPosition.Z += RayStep * (float)Math.Sin(rayAngle.X) * (float)Math.Cos(rayAngle.Y);
+                            rayDistance += RayStep;
+                        }
+                    }
+
+                    //if (rayDistance >= MaxDepth) continue;
+
+                    // Draw pixel based on ray distance
+                    float closeFactor = 1 - (rayDistance / MaxDepth);
+                    //Console.WriteLine(closeFactor);
+                    Rectangle rect = new Rectangle(x * Drawing.Grid, y * Drawing.Grid, Drawing.Grid, Drawing.Grid);
+                    int colorFactor = (int)(255 * closeFactor);
+                    Color color = new Color(colorFactor, colorFactor, colorFactor);
+                    Drawing.DrawRect(rect, color, game);
+                }
+            }
 
         }
 
