@@ -6,7 +6,7 @@ namespace Test3D
 {
     public class Map
     {
-        private float fps;
+        private const float Pi = (float)Math.PI;
 
         // Map data
         private BlockType[,,] map;
@@ -15,6 +15,10 @@ namespace Test3D
         private const int height = 32;
         private const int length = 32;
 
+        private const bool ShowSky = false;
+
+        private float fps;
+
         // Player data
         private Vector3 position;
         private Vector2 angle;
@@ -22,17 +26,34 @@ namespace Test3D
         private Vector3 direction;
         private Vector2 rotation;
 
-        private const float Speed = 3;
+        private const float Speed = 5;
         private const float Spin = 1;
 
-        private const float Fov = (float)Math.PI / 4;
+        private const float BaseFov = Pi / 4;
+        private readonly Vector2 Fov = new Vector2(BaseFov, BaseFov);
 
         // Ray data
-        private const float RayStep = 0.4f;
-        private const float MaxDepth = 64;
+        private const float RayStep = 0.1f;
+        private const float MaxDepth = 32;
 
         public Map()
         {
+            // Initialize field of view
+            //if (Drawing.GridWidth == Drawing.GridHeight)
+            //{
+            //    Fov = new Vector2(BaseFov, BaseFov);
+            //}
+            //else if (Drawing.GridWidth > Drawing.GridHeight)
+            //{
+            //    float factor = (float)Drawing.GridWidth / Drawing.GridHeight;
+            //    Fov = new Vector2(BaseFov * factor, BaseFov);
+            //}
+            //else
+            //{
+            //    float factor = (float)Drawing.GridHeight / Drawing.GridWidth;
+            //    Fov = new Vector2(BaseFov, BaseFov * factor);
+            //}
+
             // Initialize map
             map = new BlockType[width, height, length];
             for (int x = 0; x < width; x++)
@@ -41,23 +62,16 @@ namespace Test3D
                 {
                     for (int z = 0; z < length; z++)
                     {
-                        // Calculate grass positions
-                        int floorLevel = height / 4;
-                        if (y < floorLevel)
+                        if (x % 4 == 0 && y % 4 == 0 && z % 4 == 0)
                         {
-                            int centered = Math.Abs((x + z) - (width / 2 + length / 2));
-                            int centered01 = 1 - (centered / (width / 2 + length / 2));
-                            if (centered01 * floorLevel < y)
-                            {
-                                map[x, y, z] = BlockType.Grass;
-                            }
+                            map[x, y, z] = BlockType.White;
                         }
                     }
                 }
             }
 
             // Initialize player
-            position = new Vector3(width / 2, height / 2, length / 2);
+            position = new Vector3(-2, 14.5f, 14.5f);
             angle = new Vector2(0, 0);
         }
 
@@ -77,17 +91,18 @@ namespace Test3D
                 for (int y = 0; y < Drawing.GridHeight; y++)
                 {
                     // Get ray angle
-                    float rayX = angle.X - (Fov / 2) + (Fov * ((float)x / Drawing.GridWidth));
-                    float rayY = angle.Y - (Fov / 2) + (Fov * ((float)y / Drawing.GridHeight));
+                    float rayX = angle.X - (Fov.X / 2) + (Fov.X * ((float)x / Drawing.GridWidth));
+                    float rayY = angle.Y - (Fov.Y / 2) + (Fov.Y * ((float)y / Drawing.GridHeight));
                     Vector2 rayAngle = new Vector2(rayX, rayY);
 
                     // Initialize ray
                     Vector3 rayPosition = position;
                     float rayDistance = 0;
                     bool hitWall = false;
+                    BlockType hitBlock = BlockType.Empty;
 
-                    // While wall not hit and ray not exceeded max depth
-                    while (!hitWall && rayDistance < MaxDepth)
+                    // While nothing hit and ray not exceeded max depth
+                    while (hitBlock == BlockType.Empty && rayDistance < MaxDepth)
                     {
                         // If in bounds, check whether wall hit
                         if (
@@ -96,18 +111,13 @@ namespace Test3D
                             rayPosition.Z >= 0 && rayPosition.Z < length
                             )
                         {
+                            // Get ray coordiates on map
                             int mapX = (int)rayPosition.X;
                             int mapY = (int)rayPosition.Y;
                             int mapZ = (int)rayPosition.Z;
 
-                            try
-                            {
-                                if (map[mapX, mapY, mapZ] != BlockType.Air) hitWall = true;
-                            }
-                            catch
-                            {
-                                Console.WriteLine($"{mapX}, {mapY}, {mapZ}");
-                            }
+                            // Set hit block
+                            hitBlock = map[mapX, mapY, mapZ];
                         }
 
                         // If wall not hit, increment ray distance
@@ -120,14 +130,30 @@ namespace Test3D
                         }
                     }
 
-                    //if (rayDistance >= MaxDepth) continue;
+                    // Skip draw if showing sky
+                    if (ShowSky && rayDistance >= MaxDepth) continue;
 
                     // Draw pixel based on ray distance
                     float closeFactor = 1 - (rayDistance / MaxDepth);
-                    //Console.WriteLine(closeFactor);
                     Rectangle rect = new Rectangle(x * Drawing.Grid, y * Drawing.Grid, Drawing.Grid, Drawing.Grid);
                     int colorFactor = (int)(255 * closeFactor);
                     Color color = new Color(colorFactor, colorFactor, colorFactor);
+                    // Tint color based on hit block
+                    switch (hitBlock)
+                    {
+                        case BlockType.Red:
+                            color.G /= 2;
+                            color.B /= 2;
+                            break;
+                        case BlockType.Green:
+                            color.R /= 2;
+                            color.B /= 2;
+                            break;
+                        case BlockType.Blue:
+                            color.R /= 2;
+                            color.G /= 2;
+                            break;
+                    }
                     Drawing.DrawRect(rect, color, game);
                 }
             }
@@ -168,14 +194,14 @@ namespace Test3D
             // Update angle
             angle += rotation * Spin * delta;
             // Clamp angle Y
-            angle.Y = Math.Clamp(angle.Y, (float)Math.PI / -2, (float)Math.PI / 2);
+            angle.Y = Math.Clamp(angle.Y, Pi / -2, Pi / 2);
 
             // Update position frontways
             position.X += direction.X * (float)Math.Cos(angle.X) * (float)Math.Cos(angle.Y) * Speed * delta;
             position.Y += direction.X * (float)Math.Sin(angle.Y) * Speed * delta;
             position.Z += direction.X * (float)Math.Sin(angle.X) * (float)Math.Cos(angle.Y) * Speed * delta;
             // Update position sideways
-            position.X += direction.Z * (float)Math.Sin(angle.X) * Speed * delta;
+            position.X -= direction.Z * (float)Math.Sin(angle.X) * Speed * delta;
             position.Z += direction.Z * (float)Math.Cos(angle.X) * Speed * delta;
             // Update position vertically
             position.Y += direction.Y * Speed * delta;

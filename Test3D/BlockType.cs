@@ -2,8 +2,10 @@
 {
     public enum BlockType
     {
-        Air,
-        Grass,
-        Stone
+        Empty,
+        White,
+        Red,
+        Green,
+        Blue
     }
 }
