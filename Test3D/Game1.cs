@@ -6,36 +6,41 @@ namespace Test3D
 {
     public class Game1 : Game
     {
-        private GraphicsDeviceManager _graphics;
-        private SpriteBatch _spriteBatch;
+        public GraphicsDeviceManager Graphics { get; private set; }
+        public SpriteBatch SpriteBatch { get; private set; }
+
+        public KeyboardState KeyboardState { get; private set; }
+
+        private Map map = new Map();
 
         public Game1()
         {
-            _graphics = new GraphicsDeviceManager(this);
+            Graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
         }
 
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
+            // Initialize graphics
+            Drawing.InitializeGraphics(this);
 
             base.Initialize();
         }
 
         protected override void LoadContent()
         {
-            _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            // TODO: use this.Content to load your game content here
+            SpriteBatch = new SpriteBatch(GraphicsDevice);
         }
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
+            // Get and process keyboard state
+            KeyboardState = Keyboard.GetState();
+            ProcessKeyboardState();
 
-            // TODO: Add your update logic here
+            // Update map
+            map.Update(gameTime, this);
 
             base.Update(gameTime);
         }
@@ -44,9 +49,21 @@ namespace Test3D
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            // TODO: Add your drawing code here
+            SpriteBatch.Begin();
+
+            // Draw map
+            map.Draw(this);
+
+            SpriteBatch.End();
 
             base.Draw(gameTime);
+        }
+
+        private void ProcessKeyboardState()
+        {
+            KeyboardState state = KeyboardState;
+
+            if (state.IsKeyDown(Keys.Escape)) Exit();
         }
     }
 }
