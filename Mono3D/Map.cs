@@ -12,10 +12,14 @@ namespace Mono3D
         private byte[,,] map;
 
         private const int Width = 32;
-        private const int Height = 32;
+        private const int Height = 16;
         private const int Length = 32;
 
         private const bool ShowSky = false;
+
+        private const int SmoothingIters = 3;
+        private const float SmoothingFactor = 0.7f;
+        private readonly Noise Noise = new Noise();
 
         private float fps;
 
@@ -30,7 +34,7 @@ namespace Mono3D
         private const float Spin = 1;
 
         private const float BaseFov = Pi / 4;
-        private readonly Vector2 Fov = new Vector2(BaseFov, BaseFov);
+        private readonly Vector2 Fov;
 
         // Ray data
         private const float RayStepDist = 0.2f;
@@ -38,40 +42,43 @@ namespace Mono3D
 
         public Map()
         {
+#pragma warning disable CS0162 // Unreachable code detected
+
             // Initialize field of view
-            //if (Drawing.GridWidth == Drawing.GridHeight)
-            //{
-            //    Fov = new Vector2(BaseFov, BaseFov);
-            //}
-            //else if (Drawing.GridWidth > Drawing.GridHeight)
-            //{
-            //    float factor = (float)Drawing.GridWidth / Drawing.GridHeight;
-            //    Fov = new Vector2(BaseFov * factor, BaseFov);
-            //}
-            //else
-            //{
-            //    float factor = (float)Drawing.GridHeight / Drawing.GridWidth;
-            //    Fov = new Vector2(BaseFov, BaseFov * factor);
-            //}
+            if (Drawing.GridWidth == Drawing.GridHeight)
+            {
+                Fov = new Vector2(BaseFov, BaseFov);
+            }
+            else if (Drawing.GridWidth > Drawing.GridHeight)
+            {
+                float factor = (float)Drawing.GridWidth / Drawing.GridHeight;
+                Fov = new Vector2(BaseFov * factor, BaseFov);
+            }
+            else
+            {
+                float factor = (float)Drawing.GridHeight / Drawing.GridWidth;
+                Fov = new Vector2(BaseFov, BaseFov * factor);
+            }
+
+#pragma warning restore CS0162 // Unreachable code detected
 
             // Initialize map
+            float[,] smoothNoise = Noise.GenerateSmoothNoise(Width, Length, SmoothingIters, SmoothingFactor);
             map = new byte[Width, Height, Length];
             for (int x = 0; x < Width; x++)
             {
-                for (int y = 0; y < Height; y++)
+                for (int z = 0; z < Length; z++)
                 {
-                    for (int z = 0; z < Length; z++)
+                    float yLevel = Height - (smoothNoise[x, z] * Height);
+                    for (int y = Height - 1; y > yLevel; y--)
                     {
-                        if (x % 4 == 0 && y % 4 == 0 && z % 4 == 0)
-                        {
-                            map[x, y, z] = (byte)BlockType.White;
-                        }
+                        map[x, y, z] = (byte)BlockType.White;
                     }
                 }
             }
 
             // Initialize player
-            position = new Vector3(-2, 14.5f, 14.5f);
+            position = new Vector3(0, 0, 0);
             angle = new Vector2(0, 0);
         }
 

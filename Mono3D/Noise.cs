@@ -6,8 +6,6 @@ namespace Mono3D
     {
         private readonly Random Random;
 
-        private const float Smoothing = 0.5f;
-
         public Noise()
         {
             Random = new Random();
@@ -37,7 +35,7 @@ namespace Mono3D
         }
 
         // Returns white noise of given size smoothed by given iterations
-        public float[,] GenerateSmoothNoise(int width, int height, int iterations)
+        public float[,] GenerateSmoothNoise(int width, int height, int iterations, float smoothing)
         {
             float[,] smoothNoise = GenerateWhiteNoise(width, height);
 
@@ -71,7 +69,7 @@ namespace Mono3D
                         // Smooth based on surrounding average
                         total /= count;
                         float val = smoothNoise[x, y];
-                        smoothNoise[x, y] = val * (1 - Smoothing) + total * Smoothing;
+                        smoothNoise[x, y] = val * (1 - smoothing) + total * smoothing;
                     }
                 }
             }
