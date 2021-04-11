@@ -2,7 +2,7 @@
 
 A 3D raycasting engine built in MonoGame.
 
-![Grid GIF](https://user-images.githubusercontent.com/27871609/114281435-988ab400-99fb-11eb-927c-273935e8ef42.gif)
+![Grid GIF](https://user-images.githubusercontent.com/27871609/114318182-18328480-9ac9-11eb-9f59-6159689adf67.gif)
 
 ## Controls
 
