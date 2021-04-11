@@ -1,34 +1,34 @@
-﻿using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 
 namespace Mono3D
 {
     public class Noise
     {
-        private readonly Random Random = new Random();
+        private readonly Random Random;
 
-        private readonly int Width;
-        private readonly int Height;
+        private const float Smoothing = 0.5f;
 
-        private readonly float[,] RandomNoise;
-
-        public Noise(int width, int height, int octaveCount)
+        public Noise()
         {
-            Width = width;
-            Height = height;
+            Random = new Random();
+        }
 
-            RandomNoise = GenerateNoise(octaveCount);
+        public Noise(int seed)
+        {
+            Random = new Random(seed);
         }
 
         // Returns an array of random values 0 through 1
-        private float[,] GenerateWhiteNoise()
+        public float[,] GenerateWhiteNoise(int width, int height)
         {
-            float[,] whiteNoise = new float[Width, Height];
+            float[,] whiteNoise = new float[width, height];
 
-            for (int x = 0; x < Width; x++)
+            // For each pixel
+            for (int x = 0; x < width; x++)
             {
-                for (int y = 0; y < Height; y++)
+                for (int y = 0; y < height; y++)
                 {
+                    // Set to random float
                     whiteNoise[x, y] = (float)Random.NextDouble();
                 }
             }
@@ -36,27 +36,47 @@ namespace Mono3D
             return whiteNoise;
         }
 
-        // Returns a noise array of given size and octave
-        private float[,] GenerateNoise(int octaveCount)
+        // Returns white noise of given size smoothed by given iterations
+        public float[,] GenerateSmoothNoise(int width, int height, int iterations)
         {
-            return GenerateWhiteNoise();
-        }
+            float[,] smoothNoise = GenerateWhiteNoise(width, height);
 
-        public void Draw(GameTime gameTime, Game1 game)
-        {
-            int gridWidth = Drawing.Width / Width;
-            int gridHeight = Drawing.Height / Height;
-
-            for (int x = 0; x < Width; x++)
+            // For each iteration
+            for (int i = 0; i < iterations; i++)
             {
-                for (int y = 0; y < Height; y++)
+                // For each pixel
+                for (int x = 0; x < width; x++)
                 {
-                    Rectangle rect = new Rectangle(x * gridWidth, y * gridHeight, gridWidth, gridHeight);
-                    float colorFactor = RandomNoise[x, y];
-                    Color color = new Color(colorFactor, colorFactor, colorFactor);
-                    Drawing.DrawRect(rect, color, game);
+                    for (int y = 0; y < height; y++)
+                    {
+                        // Get surrounding pixel range
+                        int xa = x == 0 ? x : x - 1;
+                        int ya = y == 0 ? y : y - 1;
+                        int xb = x == width - 1 ? x : x + 1;
+                        int yb = y == height - 1 ? y : y + 1;
+
+                        // Get average of values around pixel
+                        float total = 0;
+                        int count = 0;
+                        for (int xx = xa; xx <= xb; xx++)
+                        {
+                            for (int yy = ya; yy <= yb; yy++)
+                            {
+                                if (x == xx && y == yy) continue;
+                                total += smoothNoise[xx, yy];
+                                count++;
+                            }
+                        }
+
+                        // Smooth based on surrounding average
+                        total /= count;
+                        float val = smoothNoise[x, y];
+                        smoothNoise[x, y] = val * (1 - Smoothing) + total * Smoothing;
+                    }
                 }
             }
+
+            return smoothNoise;
         }
     }
 }
