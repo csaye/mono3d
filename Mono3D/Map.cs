@@ -33,7 +33,7 @@ namespace Mono3D
         private readonly Vector2 Fov = new Vector2(BaseFov, BaseFov);
 
         // Ray data
-        private const float RayStep = 0.5f;
+        private const float RayStepDist = 0.2f;
         private const float MaxDepth = 32;
 
         public Map()

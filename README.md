@@ -23,9 +23,9 @@ Open in Visual Studio and press the big play button or use F5 to run.
 
 [Drawing.cs](Mono3D/Drawing.cs)
 ```cs
-public const int Grid = 8; // Size of grid
-public const int GridWidth = 64; // Width of grid
-public const int GridHeight = 64; // Height of grid
+public const int Grid = 4; // Size of grid
+public const int GridWidth = 128; // Width of grid
+public const int GridHeight = 128; // Height of grid
 ```
 
 [Map.cs](Mono3D/Map.cs)
@@ -40,6 +40,6 @@ private const float Speed = 3; // Player movement base speed
 private const float Spin = 1; // Player rotation base speed
 private const float BaseFov = Pi / 4; // Base FOV of player
 
-private const float RayStep = 0.5f; // Distance between ray steps
+private const float RayStepDist = 0.2f; // Distance between ray steps
 private const float MaxDepth = 32; // Maximum ray depth
 ```

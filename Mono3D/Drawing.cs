@@ -6,10 +6,10 @@ namespace Mono3D
     public static class Drawing
     {
         // Size of grid
-        public const int Grid = 8;
+        public const int Grid = 4;
         // Width and height of grid
-        public const int GridWidth = 64;
-        public const int GridHeight = 64;
+        public const int GridWidth = 128;
+        public const int GridHeight = 128;
         // Width and height of screen
         public const int Width = Grid * GridWidth;
         public const int Height = Grid * GridHeight;
