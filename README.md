@@ -31,10 +31,13 @@ public const int GridHeight = 128; // Height of grid
 [Map.cs](Mono3D/Map.cs)
 ```cs
 private const int Width = 32; // Width of map (x)
-private const int Height = 32; // Height of map (y)
+private const int Height = 16; // Height of map (y)
 private const int Length = 32; // Length of map (z)
 
 private const bool ShowSky = false; // Whether sky is shown
+
+private const int SmoothingIters = 3; // Noise smoothing iterations
+private const float SmoothingFactor = 0.7f; // Noise smoothing factor
 
 private const float Speed = 3; // Player movement base speed
 private const float Spin = 1; // Player rotation base speed
