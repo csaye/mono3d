@@ -52,7 +52,7 @@ namespace Mono3D
             SpriteBatch.Begin();
 
             // Draw map
-            map.Draw(this);
+            map.Draw(gameTime, this);
 
             SpriteBatch.End();
 

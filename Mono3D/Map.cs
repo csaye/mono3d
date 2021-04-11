@@ -78,13 +78,15 @@ namespace Mono3D
         public void Update(GameTime gameTime, Game1 game)
         {
             float delta = (float)gameTime.ElapsedGameTime.TotalSeconds; // Get time delta
-            fps = 1 / delta; // Set fps
             ProcessKeyboardState(game); // Process keyboard state
             MovePlayer(delta); // Move player by delta
         }
 
-        public void Draw(Game1 game)
+        public void Draw(GameTime gameTime, Game1 game)
         {
+            float delta = (float)gameTime.ElapsedGameTime.TotalSeconds; // Get time delta
+            fps = 1 / delta; // Set fps
+
             // Cast ray for each grid
             for (int x = 0; x < Drawing.GridWidth; x++)
             {
@@ -94,6 +96,13 @@ namespace Mono3D
                     float rayX = angle.X - (Fov.X / 2) + (Fov.X * ((float)x / Drawing.GridWidth));
                     float rayY = angle.Y - (Fov.Y / 2) + (Fov.Y * ((float)y / Drawing.GridHeight));
                     Vector2 rayAngle = new Vector2(rayX, rayY);
+
+                    // Get ray steps
+                    float cosY = (float)Math.Cos(rayAngle.Y);
+                    float rayStepX = RayStepDist * (float)Math.Cos(rayAngle.X) * cosY;
+                    float rayStepY = RayStepDist * (float)Math.Sin(rayAngle.Y);
+                    float rayStepZ = RayStepDist * (float)Math.Sin(rayAngle.X) * cosY;
+                    Vector3 rayStep = new Vector3(rayStepX, rayStepY, rayStepZ);
 
                     // Initialize ray
                     Vector3 rayPosition = position;
@@ -120,13 +129,11 @@ namespace Mono3D
                             hitBlock = map[mapX, mapY, mapZ];
                         }
 
-                        // If wall not hit, increment ray distance
+                        // If wall not hit, increment ray position and distance
                         if (!hitWall)
                         {
-                            rayPosition.X += RayStep * (float)Math.Cos(rayAngle.X) * (float)Math.Cos(rayAngle.Y);
-                            rayPosition.Y += RayStep * (float)Math.Sin(rayAngle.Y);
-                            rayPosition.Z += RayStep * (float)Math.Sin(rayAngle.X) * (float)Math.Cos(rayAngle.Y);
-                            rayDistance += RayStep;
+                            rayPosition += rayStep;
+                            rayDistance += RayStepDist;
                         }
                     }
 
@@ -139,21 +146,21 @@ namespace Mono3D
                     int colorFactor = (int)(255 * closeFactor);
                     Color color = new Color(colorFactor, colorFactor, colorFactor);
                     // Tint color based on hit block
-                    switch (hitBlock)
-                    {
-                        case BlockType.Red:
-                            color.G /= 2;
-                            color.B /= 2;
-                            break;
-                        case BlockType.Green:
-                            color.R /= 2;
-                            color.B /= 2;
-                            break;
-                        case BlockType.Blue:
-                            color.R /= 2;
-                            color.G /= 2;
-                            break;
-                    }
+                    //switch (hitBlock)
+                    //{
+                    //    case BlockType.Red:
+                    //        color.G /= 2;
+                    //        color.B /= 2;
+                    //        break;
+                    //    case BlockType.Green:
+                    //        color.R /= 2;
+                    //        color.B /= 2;
+                    //        break;
+                    //    case BlockType.Blue:
+                    //        color.R /= 2;
+                    //        color.G /= 2;
+                    //        break;
+                    //}
                     Drawing.DrawRect(rect, color, game);
                 }
             }
@@ -162,6 +169,10 @@ namespace Mono3D
             Drawing.DrawText("pos: " + position.ToString(), new Vector2(8, 8), Color.White, game);
             Drawing.DrawText("angle: " + angle.ToString(), new Vector2(8, 24), Color.White, game);
             Drawing.DrawText("fps: " + fps.ToString(), new Vector2(8, 40), Color.White, game);
+
+            // Draw crosshair
+            Rectangle crosshairRect = new Rectangle(Drawing.Width / 2 - 1, Drawing.Height / 2 - 1, 2, 2);
+            Drawing.DrawRect(crosshairRect, Color.White, game);
         }
 
         private void ProcessKeyboardState(Game1 game)
