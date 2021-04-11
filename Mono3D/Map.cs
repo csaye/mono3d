@@ -9,7 +9,7 @@ namespace Mono3D
         private const float Pi = (float)Math.PI;
 
         // Map data
-        private BlockType[,,] map;
+        private byte[,,] map;
 
         private const int Width = 32;
         private const int Height = 32;
@@ -55,7 +55,7 @@ namespace Mono3D
             //}
 
             // Initialize map
-            map = new BlockType[Width, Height, Length];
+            map = new byte[Width, Height, Length];
             for (int x = 0; x < Width; x++)
             {
                 for (int y = 0; y < Height; y++)
@@ -64,7 +64,7 @@ namespace Mono3D
                     {
                         if (x % 4 == 0 && y % 4 == 0 && z % 4 == 0)
                         {
-                            map[x, y, z] = BlockType.White;
+                            map[x, y, z] = (byte)BlockType.White;
                         }
                     }
                 }
@@ -126,7 +126,7 @@ namespace Mono3D
                             int mapZ = (int)rayPosition.Z;
 
                             // Set hit block
-                            hitBlock = map[mapX, mapY, mapZ];
+                            hitBlock = (BlockType)map[mapX, mapY, mapZ];
                         }
 
                         // If wall not hit, increment ray position and distance
@@ -143,7 +143,7 @@ namespace Mono3D
                     // Draw pixel based on ray distance
                     float closeFactor = 1 - (rayDistance / MaxDepth);
                     Rectangle rect = new Rectangle(x * Drawing.Grid, y * Drawing.Grid, Drawing.Grid, Drawing.Grid);
-                    int colorFactor = (int)(255 * closeFactor);
+                    byte colorFactor = (byte)(255 * closeFactor);
                     Color color = new Color(colorFactor, colorFactor, colorFactor);
                     // Tint color based on hit block
                     //switch (hitBlock)
@@ -171,7 +171,9 @@ namespace Mono3D
             Drawing.DrawText("fps: " + fps.ToString(), new Vector2(8, 40), Color.White, game);
 
             // Draw crosshair
-            Rectangle crosshairRect = new Rectangle(Drawing.Width / 2 - 1, Drawing.Height / 2 - 1, 2, 2);
+            Rectangle crosshairRect = new Rectangle(Drawing.Width / 2 - 4, Drawing.Height / 2 - 1, 8, 2);
+            Drawing.DrawRect(crosshairRect, Color.White, game);
+            crosshairRect = new Rectangle(Drawing.Width / 2 - 1, Drawing.Height / 2 - 4, 2, 8);
             Drawing.DrawRect(crosshairRect, Color.White, game);
         }
 
