@@ -11,13 +11,18 @@ namespace Mono3D
 
         public KeyboardState KeyboardState { get; private set; }
 
-        private Map map = new Map();
+        private readonly Player Player;
+        private readonly Map Map;
 
         public Game1()
         {
             Graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+
+            // Initialize player and map
+            Player = new Player();
+            Map = new Map(Player);
         }
 
         protected override void Initialize()
@@ -39,8 +44,8 @@ namespace Mono3D
             KeyboardState = Keyboard.GetState();
             ProcessKeyboardState();
 
-            // Update map
-            map.Update(gameTime, this);
+            // Update player
+            Player.Update(gameTime, this);
 
             base.Update(gameTime);
         }
@@ -49,12 +54,9 @@ namespace Mono3D
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            SpriteBatch.Begin();
-
-            // Draw map
-            map.Draw(gameTime, this);
-
-            SpriteBatch.End();
+            SpriteBatch.Begin(); // Begin sprite batch
+            Map.Draw(gameTime, this); // Draw map
+            SpriteBatch.End(); // End sprite batch
 
             base.Draw(gameTime);
         }
@@ -63,7 +65,7 @@ namespace Mono3D
         {
             KeyboardState state = KeyboardState;
 
-            if (state.IsKeyDown(Keys.Escape)) Exit();
+            if (state.IsKeyDown(Keys.Escape)) Exit(); // Exit if escape key pressed
         }
     }
 }

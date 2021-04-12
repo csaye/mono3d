@@ -1,70 +1,39 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using System;
 
 namespace Mono3D
 {
     public class Map
     {
-        private const float Pi = (float)Math.PI;
+        private readonly Player Player;
 
-        // Map data
-        private byte[,,] map;
+        private readonly byte[,,] Blocks;
 
+        // Map dimensions
         private const int Width = 32;
         private const int Height = 16;
         private const int Length = 32;
 
-        private const bool ShowSky = false;
+        private const bool ShowSky = false; // Whether sky is shown
+        private const bool ShowColors = false; // Whether colors are shown
 
-        private const int SmoothingIters = 3;
-        private const float SmoothingFactor = 0.7f;
+        private const int SmoothingIters = 3; // Noise smoothing iterations
+        private const float SmoothingFactor = 0.7f; // Noise smoothing factor
         private readonly Noise Noise = new Noise();
 
         private float fps;
 
-        // Player data
-        private Vector3 position;
-        private Vector2 angle;
+        private const float RayStepDist = 0.2f; // Ray step distance
+        private const float MaxDepth = 32; // Maximum ray depth
 
-        private Vector3 direction;
-        private Vector2 rotation;
-
-        private const float Speed = 3;
-        private const float Spin = 1;
-
-        private const float BaseFov = Pi / 4;
-        private readonly Vector2 Fov;
-
-        // Ray data
-        private const float RayStepDist = 0.2f;
-        private const float MaxDepth = 32;
-
-        public Map()
+        public Map(Player player)
         {
-#pragma warning disable CS0162 // Unreachable code detected
-
-            // Initialize field of view
-            if (Drawing.GridWidth == Drawing.GridHeight)
-            {
-                Fov = new Vector2(BaseFov, BaseFov);
-            }
-            else if (Drawing.GridWidth > Drawing.GridHeight)
-            {
-                float factor = (float)Drawing.GridWidth / Drawing.GridHeight;
-                Fov = new Vector2(BaseFov * factor, BaseFov);
-            }
-            else
-            {
-                float factor = (float)Drawing.GridHeight / Drawing.GridWidth;
-                Fov = new Vector2(BaseFov, BaseFov * factor);
-            }
-
-#pragma warning restore CS0162 // Unreachable code detected
+            // Initialize player
+            Player = player;
 
             // Initialize map
             float[,] smoothNoise = Noise.GenerateSmoothNoise(Width, Length, SmoothingIters, SmoothingFactor);
-            map = new byte[Width, Height, Length];
+            Blocks = new byte[Width, Height, Length];
             for (int x = 0; x < Width; x++)
             {
                 for (int z = 0; z < Length; z++)
@@ -72,27 +41,20 @@ namespace Mono3D
                     float yLevel = Height - (smoothNoise[x, z] * Height);
                     for (int y = Height - 1; y > yLevel; y--)
                     {
-                        map[x, y, z] = (byte)BlockType.White;
+                        Blocks[x, y, z] = (byte)BlockType.White;
                     }
                 }
             }
-
-            // Initialize player
-            position = new Vector3(0, 0, 0);
-            angle = new Vector2(0, 0);
-        }
-
-        public void Update(GameTime gameTime, Game1 game)
-        {
-            float delta = (float)gameTime.ElapsedGameTime.TotalSeconds; // Get time delta
-            ProcessKeyboardState(game); // Process keyboard state
-            MovePlayer(delta); // Move player by delta
         }
 
         public void Draw(GameTime gameTime, Game1 game)
         {
             float delta = (float)gameTime.ElapsedGameTime.TotalSeconds; // Get time delta
             fps = 1 / delta; // Set fps
+
+            Vector2 angle = Player.GetAngle();
+            Vector3 position = Player.GetPosition();
+            Vector2 Fov = Player.GetFov();
 
             // Cast ray for each grid
             for (int x = 0; x < Drawing.GridWidth; x++)
@@ -133,7 +95,7 @@ namespace Mono3D
                             int mapZ = (int)rayPosition.Z;
 
                             // Set hit block
-                            hitBlock = (BlockType)map[mapX, mapY, mapZ];
+                            hitBlock = (BlockType)Blocks[mapX, mapY, mapZ];
                         }
 
                         // If wall not hit, increment ray position and distance
@@ -147,27 +109,33 @@ namespace Mono3D
                     // Skip draw if showing sky
                     if (ShowSky && rayDistance >= MaxDepth) continue;
 
-                    // Draw pixel based on ray distance
+                    // Set rect and color based on ray distance
                     float closeFactor = 1 - (rayDistance / MaxDepth);
                     Rectangle rect = new Rectangle(x * Drawing.Grid, y * Drawing.Grid, Drawing.Grid, Drawing.Grid);
                     byte colorFactor = (byte)(255 * closeFactor);
                     Color color = new Color(colorFactor, colorFactor, colorFactor);
+
                     // Tint color based on hit block
-                    //switch (hitBlock)
-                    //{
-                    //    case BlockType.Red:
-                    //        color.G /= 2;
-                    //        color.B /= 2;
-                    //        break;
-                    //    case BlockType.Green:
-                    //        color.R /= 2;
-                    //        color.B /= 2;
-                    //        break;
-                    //    case BlockType.Blue:
-                    //        color.R /= 2;
-                    //        color.G /= 2;
-                    //        break;
-                    //}
+                    if (ShowColors && (int)hitBlock > 1)
+                    {
+                        switch (hitBlock)
+                        {
+                            case BlockType.Red:
+                                color.G /= 2;
+                                color.B /= 2;
+                                break;
+                            case BlockType.Green:
+                                color.R /= 2;
+                                color.B /= 2;
+                                break;
+                            case BlockType.Blue:
+                                color.R /= 2;
+                                color.G /= 2;
+                                break;
+                        }
+                    }
+
+                    // Draw pixel
                     Drawing.DrawRect(rect, color, game);
                 }
             }
@@ -182,49 +150,6 @@ namespace Mono3D
             Drawing.DrawRect(crosshairRect, Color.White, game);
             crosshairRect = new Rectangle(Drawing.Width / 2 - 1, Drawing.Height / 2 - 4, 2, 8);
             Drawing.DrawRect(crosshairRect, Color.White, game);
-        }
-
-        private void ProcessKeyboardState(Game1 game)
-        {
-            KeyboardState state = game.KeyboardState;
-
-            // Get movement direction
-            if (state.IsKeyDown(Keys.W)) direction.X = 1;
-            else if (state.IsKeyDown(Keys.S)) direction.X = -1;
-            else direction.X = 0;
-            if (state.IsKeyDown(Keys.D)) direction.Z = 1;
-            else if (state.IsKeyDown(Keys.A)) direction.Z = -1;
-            else direction.Z = 0;
-            if (state.IsKeyDown(Keys.LeftShift)) direction.Y = 1;
-            else if (state.IsKeyDown(Keys.Space)) direction.Y = -1;
-            else direction.Y = 0;
-
-            // Get movement rotation
-            if (state.IsKeyDown(Keys.Up)) rotation.Y = -1;
-            else if (state.IsKeyDown(Keys.Down)) rotation.Y = 1;
-            else rotation.Y = 0;
-            if (state.IsKeyDown(Keys.Right)) rotation.X = 1;
-            else if (state.IsKeyDown(Keys.Left)) rotation.X = -1;
-            else rotation.X = 0;
-        }
-
-        // Moves player based on given delta
-        private void MovePlayer(float delta)
-        {
-            // Update angle
-            angle += rotation * Spin * delta;
-            // Clamp angle Y
-            angle.Y = Math.Clamp(angle.Y, Pi / -2, Pi / 2);
-
-            // Update position frontways
-            position.X += direction.X * (float)Math.Cos(angle.X) * (float)Math.Cos(angle.Y) * Speed * delta;
-            position.Y += direction.X * (float)Math.Sin(angle.Y) * Speed * delta;
-            position.Z += direction.X * (float)Math.Sin(angle.X) * (float)Math.Cos(angle.Y) * Speed * delta;
-            // Update position sideways
-            position.X -= direction.Z * (float)Math.Sin(angle.X) * Speed * delta;
-            position.Z += direction.Z * (float)Math.Cos(angle.X) * Speed * delta;
-            // Update position vertically
-            position.Y += direction.Y * Speed * delta;
         }
     }
 }
