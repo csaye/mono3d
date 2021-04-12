@@ -35,14 +35,18 @@ private const int Height = 16; // Height of map (y)
 private const int Length = 32; // Length of map (z)
 
 private const bool ShowSky = false; // Whether sky is shown
+private const bool ShowColors = false; // Whether colors are shown
 
 private const int SmoothingIters = 3; // Noise smoothing iterations
 private const float SmoothingFactor = 0.7f; // Noise smoothing factor
 
-private const float Speed = 3; // Player movement base speed
-private const float Spin = 1; // Player rotation base speed
-private const float BaseFov = Pi / 4; // Base FOV of player
-
 private const float RayStepDist = 0.2f; // Distance between ray steps
 private const float MaxDepth = 32; // Maximum ray depth
+```
+
+[Player.cs](Mono3D/Player.cs)
+```cs
+private const float Speed = 3; // Player movement base speed
+private const float Spin = 1; // Player rotation base speed
+private const float BaseFov = Pi / 4; // Base field of view
 ```
