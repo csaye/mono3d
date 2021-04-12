@@ -5,6 +5,8 @@ namespace Mono3D
 {
     public class Map
     {
+        private const float Pi = (float)Math.PI;
+
         private readonly Player Player;
 
         private readonly byte[,,] Blocks;
@@ -26,10 +28,33 @@ namespace Mono3D
         private const float RayStepDist = 0.2f; // Ray step distance
         private const float MaxDepth = 32; // Maximum ray depth
 
+        private const float BaseFov = Pi / 4; // Base field of view
+        private readonly Vector2 Fov;
+
         public Map(Player player)
         {
             // Initialize player
             Player = player;
+
+#pragma warning disable CS0162 // Unreachable code detected
+
+            // Initialize field of view
+            if (Drawing.GridWidth == Drawing.GridHeight)
+            {
+                Fov = new Vector2(BaseFov, BaseFov);
+            }
+            else if (Drawing.GridWidth > Drawing.GridHeight)
+            {
+                float factor = (float)Drawing.GridWidth / Drawing.GridHeight;
+                Fov = new Vector2(BaseFov * factor, BaseFov);
+            }
+            else
+            {
+                float factor = (float)Drawing.GridHeight / Drawing.GridWidth;
+                Fov = new Vector2(BaseFov, BaseFov * factor);
+            }
+
+#pragma warning restore CS0162 // Unreachable code detected
 
             // Initialize map
             float[,] smoothNoise = Noise.GenerateSmoothNoise(Width, Length, SmoothingIters, SmoothingFactor);
@@ -54,7 +79,6 @@ namespace Mono3D
 
             Vector2 angle = Player.GetAngle();
             Vector3 position = Player.GetPosition();
-            Vector2 Fov = Player.GetFov();
 
             // Cast ray for each grid
             for (int x = 0; x < Drawing.GridWidth; x++)
@@ -111,6 +135,7 @@ namespace Mono3D
 
                     // Set rect and color based on ray distance
                     float closeFactor = 1 - (rayDistance / MaxDepth);
+                    closeFactor = Math.Clamp(closeFactor, 0, 1);
                     Rectangle rect = new Rectangle(x * Drawing.Grid, y * Drawing.Grid, Drawing.Grid, Drawing.Grid);
                     byte colorFactor = (byte)(255 * closeFactor);
                     Color color = new Color(colorFactor, colorFactor, colorFactor);
@@ -141,9 +166,9 @@ namespace Mono3D
             }
 
             // Draw data text
-            Drawing.DrawText("pos: " + position.ToString(), new Vector2(8, 8), Color.White, game);
-            Drawing.DrawText("angle: " + angle.ToString(), new Vector2(8, 24), Color.White, game);
-            Drawing.DrawText("fps: " + fps.ToString(), new Vector2(8, 40), Color.White, game);
+            Drawing.DrawText($"pos: {position}", new Vector2(8, 8), Color.White, game);
+            Drawing.DrawText($"angle: {angle}", new Vector2(8, 24), Color.White, game);
+            Drawing.DrawText($"fps: {fps}", new Vector2(8, 40), Color.White, game);
 
             // Draw crosshair
             Rectangle crosshairRect = new Rectangle(Drawing.Width / 2 - 4, Drawing.Height / 2 - 1, 8, 2);

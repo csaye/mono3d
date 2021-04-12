@@ -17,35 +17,10 @@ namespace Mono3D
         private const float Speed = 3; // Player movement speed
         private const float Spin = 1; // Player rotation speed
 
-        private const float BaseFov = Pi / 4; // Base field of view
-        private readonly Vector2 Fov;
-
         public Vector3 GetPosition() => position;
         public Vector2 GetAngle() => angle;
-        public Vector2 GetFov() => Fov;
 
-        public Player()
-        {
-#pragma warning disable CS0162 // Unreachable code detected
-
-            // Initialize field of view
-            if (Drawing.GridWidth == Drawing.GridHeight)
-            {
-                Fov = new Vector2(BaseFov, BaseFov);
-            }
-            else if (Drawing.GridWidth > Drawing.GridHeight)
-            {
-                float factor = (float)Drawing.GridWidth / Drawing.GridHeight;
-                Fov = new Vector2(BaseFov * factor, BaseFov);
-            }
-            else
-            {
-                float factor = (float)Drawing.GridHeight / Drawing.GridWidth;
-                Fov = new Vector2(BaseFov, BaseFov * factor);
-            }
-
-#pragma warning restore CS0162 // Unreachable code detected
-        }
+        public Player() { }
 
         public void Update(GameTime gameTime, Game1 game)
         {

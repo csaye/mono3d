@@ -1,4 +1,4 @@
-# MonoGame 3D
+# Mono3D
 
 A 3D raycasting engine built in MonoGame.
 
@@ -18,7 +18,7 @@ Arrow keys: look up/down/left/right
 
 Ensure [Visual Studio](https://visualstudio.microsoft.com/downloads/) and [MonoGame](https://www.monogame.net/downloads/) are installed.
 
-Clone the project by running `git clone https://github.com/csaye/monogame-3d`
+Clone the project by running `git clone https://github.com/csaye/mono3d`
 
 Open in Visual Studio and press the big play button or use F5 to run.
 
@@ -45,11 +45,12 @@ private const float SmoothingFactor = 0.7f; // Noise smoothing factor
 
 private const float RayStepDist = 0.2f; // Distance between ray steps
 private const float MaxDepth = 32; // Maximum ray depth
+
+private const float BaseFov = Pi / 4; // Base field of view
 ```
 
 [Player.cs](Mono3D/Player.cs)
 ```cs
 private const float Speed = 3; // Player movement base speed
 private const float Spin = 1; // Player rotation base speed
-private const float BaseFov = Pi / 4; // Base field of view
 ```
