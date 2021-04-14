@@ -9,13 +9,6 @@ namespace Mono3D
 
         private readonly Player Player;
 
-        private readonly byte[,,] Blocks;
-
-        // Map dimensions
-        private const int Width = 32;
-        private const int Height = 16;
-        private const int Length = 32;
-
         private const bool ShowSky = false; // Whether sky is shown
         private const bool ShowColors = false; // Whether colors are shown
 
@@ -55,21 +48,6 @@ namespace Mono3D
             }
 
 #pragma warning restore CS0162 // Unreachable code detected
-
-            // Initialize map
-            float[,] smoothNoise = Noise.GenerateSmoothNoise(Width, Length, SmoothingIters, SmoothingFactor);
-            Blocks = new byte[Width, Height, Length];
-            for (int x = 0; x < Width; x++)
-            {
-                for (int z = 0; z < Length; z++)
-                {
-                    float yLevel = Height - (smoothNoise[x, z] * Height);
-                    for (int y = Height - 1; y > yLevel; y--)
-                    {
-                        Blocks[x, y, z] = (byte)BlockType.White;
-                    }
-                }
-            }
         }
 
         public void Draw(GameTime gameTime, Game1 game)
@@ -100,34 +78,17 @@ namespace Mono3D
                     // Initialize ray
                     Vector3 rayPosition = position;
                     float rayDistance = 0;
-                    bool hitWall = false;
                     BlockType hitBlock = BlockType.Empty;
 
                     // While nothing hit and ray not exceeded max depth
                     while (hitBlock == BlockType.Empty && rayDistance < MaxDepth)
                     {
-                        // If in bounds, check whether wall hit
-                        if (
-                            rayPosition.X >= 0 && rayPosition.X < Width &&
-                            rayPosition.Y >= 0 && rayPosition.Y < Height &&
-                            rayPosition.Z >= 0 && rayPosition.Z < Length
-                            )
-                        {
-                            // Get ray coordiates on map
-                            int mapX = (int)rayPosition.X;
-                            int mapY = (int)rayPosition.Y;
-                            int mapZ = (int)rayPosition.Z;
+                        // Increment ray position and distance
+                        rayPosition += rayStep;
+                        rayDistance += RayStepDist;
 
-                            // Set hit block
-                            hitBlock = (BlockType)Blocks[mapX, mapY, mapZ];
-                        }
-
-                        // If wall not hit, increment ray position and distance
-                        if (!hitWall)
-                        {
-                            rayPosition += rayStep;
-                            rayDistance += RayStepDist;
-                        }
+                        // Set hit block
+                        hitBlock = GetBlock(rayPosition);
                     }
 
                     // Skip draw if showing sky
@@ -166,15 +127,26 @@ namespace Mono3D
             }
 
             // Draw data text
-            Drawing.DrawText($"pos: {position}", new Vector2(8, 8), Color.White, game);
-            Drawing.DrawText($"angle: {angle}", new Vector2(8, 24), Color.White, game);
-            Drawing.DrawText($"fps: {fps}", new Vector2(8, 40), Color.White, game);
+            Drawing.DrawText($"pos: {position}", new Vector2(8, 8), Color.Blue, game);
+            Drawing.DrawText($"angle: {angle}", new Vector2(8, 24), Color.Blue, game);
+            Drawing.DrawText($"fps: {fps}", new Vector2(8, 40), Color.Blue, game);
 
             // Draw crosshair
             Rectangle crosshairRect = new Rectangle(Drawing.Width / 2 - 4, Drawing.Height / 2 - 1, 8, 2);
             Drawing.DrawRect(crosshairRect, Color.White, game);
             crosshairRect = new Rectangle(Drawing.Width / 2 - 1, Drawing.Height / 2 - 4, 2, 8);
             Drawing.DrawRect(crosshairRect, Color.White, game);
+        }
+
+        private BlockType GetBlock(Vector3 pos) => GetBlock(pos.X, pos.Y, pos.Z);
+        private BlockType GetBlock(float x, float y, float z)
+        {
+            int mapX = (int)Math.Floor(x);
+            int mapY = (int)Math.Floor(y);
+            int mapZ = (int)Math.Floor(z);
+
+            if (mapX % 4 == 0 && mapY % 4 == 0 && mapZ % 4 == 0) return BlockType.White;
+            else return BlockType.Empty;
         }
     }
 }
